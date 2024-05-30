@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Projects;
 use Illuminate\Support\Facades\DB;
 use App\Models\Departments;
+use Carbon\Carbon;
 
 class ProjectService
 {
@@ -20,12 +21,25 @@ class ProjectService
 
     public function averageProjectDuration()
     {
-        return Departments::join('employees', 'departments.id', '=', 'employees.department_id')
-            ->join('employee_project', 'employees.id', '=', 'employee_project.employee_id')
-            ->join('projects', 'employee_project.project_id', '=', 'projects.id')
-            ->select('departments.id', 'departments.name', DB::raw('ROUND(AVG(DATEDIFF(projects.end_date, projects.start_date)), 0) as avg_duration'))
-            ->groupBy('departments.id', 'departments.name')
-            ->get();
+        $departments = Departments::with('projects')->get();
+
+        $result = $departments->map(function ($department) {
+            $avgDuration = $department->projects->filter(function ($project) {
+                return $project->end_date !== null;
+            })->avg(function ($project) {
+                $startDate = Carbon::parse($project->start_date);
+                $endDate = Carbon::parse($project->end_date);
+                return $startDate->diffInDays($endDate);
+            });
+
+            return [
+                'department_id' => $department->id,
+                'department_name' => $department->name,
+                'avg_duration' => round($avgDuration, 0)
+            ];
+        });
+
+        return $result;
     }
     
 }

@@ -33,6 +33,7 @@ class Employees extends Model
 
     public function departmentChanges()
     {
-        return $this->hasMany(DepartmentChange::class);
+        return $this->hasMany(DepartmentChange::class, 'employee_id');
     }
+
 }

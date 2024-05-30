@@ -13,6 +13,10 @@ class Projects extends Model
         'name', 'description', 'start_date', 'end_date', 'status'
     ];
 
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date'
+    ];
     public function employees()
     {
         return $this->belongsToMany(Employees::class, 'employee_project', 'project_id', 'employee_id');

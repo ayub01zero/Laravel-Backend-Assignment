@@ -18,7 +18,10 @@ class Departments extends Model
     {
         return $this->hasMany(Employees::class);
     }
-
+    public function projects()
+    {
+        return $this->hasManyThrough(Projects::class, Employees::class, 'department_id', 'id', 'id', 'id');
+    }
     // public function manager()
     // {
     //     return $this->hasOne(Employees::class);

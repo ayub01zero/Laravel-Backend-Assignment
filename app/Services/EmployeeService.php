@@ -42,25 +42,20 @@ class EmployeeService
 
     public function topEmployeesByCompletedProjects($departmentId)
     {
-        $topEmployees = Employees::select('employees.id', 'employees.full_name', DB::raw('COUNT(projects.id) as completed_projects'))
-            ->join('employee_project', 'employees.id', '=', 'employee_project.employee_id')
-            ->join('projects', 'employee_project.project_id', '=', 'projects.id')
-            ->where('projects.status', 'completed')
-            ->where('employees.department_id', $departmentId)
-            ->groupBy('employees.id', 'employees.full_name')
-            ->orderByDesc('completed_projects')
-            ->limit(10)
-            ->get();
+        $topEmployees = Employees::withCount(['projects' => function ($query) {
+            $query->where('status', 'completed');
+        }])
+        ->where('department_id', $departmentId)
+        ->orderBy('projects_count', 'desc')
+        ->limit(10) // yan  take 10
+        ->get();
 
         return $topEmployees;
     }
 
     public function employeesWithNoDepartmentChange()
     {
-        $employees = Employees::leftJoin('department_changes', 'employees.id', '=', 'department_changes.employee_id')
-            ->whereNull('department_changes.id')
-            ->select('employees.id', 'employees.full_name', 'employees.age', 'employees.salary', 'employees.date_of_employment', 'employees.manager_id', 'employees.department_id')
-            ->get();
+        $employees = Employees::doesntHave('departmentChanges')->get();
 
         return $employees; 
     }
